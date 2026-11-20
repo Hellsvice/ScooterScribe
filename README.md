@@ -1,52 +1,214 @@
 # ScooterScribe
 
-ScooterScribe is a C#/.NET 10 WPF desktop application for classifying micromobility repair issues from typed or spoken descriptions and suggesting possible repair actions.
+**Voice-assisted fault classification and repair guidance for electric scooters.**  
+*Magyarul: hangalapú rollerhiba-besorolás és javítási kiindulópontok.*
 
-## Upload status / Feltöltés állapota
+A Windows desktop prototype built with **C# / .NET, WPF, ML.NET and Whisper.cpp**.
 
-**Source code uploaded; model and dataset assets still missing. / A forráskód feltöltve, a modell- és adatfájlok még hiányoznak.**
+[English](#english) · [Magyar](#magyar) · [AI usage and evaluation / MI-használat és kiértékelés](ai.md)
 
-The following three files from the supplied project ZIP could not be transferred through the available GitHub connection:
-
-| Missing path | Size | Reason |
-| --- | ---: | --- |
-| `MLModel1.mlnet` | 664,181 bytes | Binary ML.NET model; the available text-file upload action cannot directly read and upload the local binary file |
-| `RuntimeAssets/MLModel1.kiserleti.mlnet` | 14,498,473 bytes | Binary ML.NET model; same connector limitation, not a GitHub 100 MB limit |
-| `RuntimeAssets/roller_hibak_tanitoadatok.csv` | 703,478 bytes | UTF-8 CSV but too large to reliably transfer from the local ZIP through the available text-only connector workflow |
-
-All three files are present in the original `ScooterScribe_GitHub_ready.zip`. Restore them at the paths above to use the ML.NET models and repair suggestions. The running application specifically requires `RuntimeAssets/MLModel1.kiserleti.mlnet` and `RuntimeAssets/roller_hibak_tanitoadatok.csv`.
-
-## Optional Whisper files / Opcionális Whisper-fájlok
-
-These dependencies were not included in the supplied ZIP and must be obtained separately:
-- `RuntimeAssets/Release/whisper-cli.exe`
-- `RuntimeAssets/ggml-whisper-base-hungarian-soup-q8_0.bin`
-
-The project ignores the local Whisper model and executable runtime folder. Speech recognition cannot work without these files. Text entry is available once the application and ML.NET assets are restored.
-
-## Requirements / Követelmények
-
-- Windows and .NET 10 SDK
-- Visual Studio with .NET desktop development workload
-- NuGet packages: NAudio, Microsoft.ML, Microsoft.ML.LightGbm (see `WpfApp1.csproj`)
-
-## Build / Fordítás
-
-1. Restore the three missing files at the exact paths listed above.
-2. Open `WpfApp1.slnx` in Visual Studio.
-3. Restore NuGet packages and build.
-4. For voice input, install the compatible Whisper executable and Hungarian model in the paths above.
-
-The code was uploaded successfully but **a full build/runtime test has not been performed in this environment**.
+---
 
 ## English
 
-The project is designed to help newcomers to micromobility repair interpret fault descriptions and find an initial troubleshooting direction. ML.NET classifies the description into a predefined fault code; a CSV catalogue provides the category and potential repair. Whisper.cpp provides optional local speech transcription. The suggested repairs must be checked by a technician.
+### About the project
 
-For transparent AI assistance and evaluation details, see [ai.md](ai.md).
+ScooterScribe is a desktop application designed to help people who are new to electric scooter maintenance take the first step in troubleshooting a fault.
+
+The idea comes from hands-on experience in micromobility maintenance: a beginner may be able to describe what is wrong with a scooter without knowing which component to inspect first. ScooterScribe turns that description into a **suggested fault category**, a **possible cause**, and an **initial repair direction**. It is a decision-support prototype, **not an automated diagnosis**.
+
+### Features
+
+- **Text or voice input:** describe a problem manually or record/open an audio file.
+- **Local speech recognition:** optionally transcribe Hungarian speech with Whisper.cpp.
+- **Fault classification:** use an ML.NET multiclass model to predict a predefined fault code.
+- **Repair suggestions:** look up possible causes and repair actions in a CSV-based catalogue.
+- **Uncertainty handling:** flag predictions with low confidence or small score margins for review.
+- **Ticket history:** save accepted fault reports locally as JSON Lines (\`hibajegyek.jsonl\`).
+
+### How it works
+
+\`\`\`text
+Spoken description ──> Whisper.cpp ──> Transcribed text ──┐
+                                                          ├──> ML.NET model
+Typed description ─────────────────────────────────────────┘         │
+                                                                     ▼
+                                                              Predicted fault code
+                                                                     │
+                                                                     ▼
+                                                        CSV repair catalogue
+                                                                     │
+                                                                     ▼
+                                              Category + possible cause + repair
+                                                                     │
+                                                                     ▼
+                                                  Technician review + local ticket
+\`\`\`
+
+The ML model predicts **predefined classes**. The repair text is **retrieved from the catalogue**, not generated by a language model. ChatGPT is **not required at runtime**.
+
+### Technology
+
+| Component | Technology |
+| --- | --- |
+| Language and runtime | C#, .NET 10 (Windows) |
+| Desktop interface | WPF / XAML |
+| Fault classification | ML.NET |
+| Voice input | NAudio and optional Whisper.cpp |
+| Repair knowledge | CSV fault catalogue |
+| Ticket storage | Local JSON Lines |
+| Development | Visual Studio |
+
+The project references **NAudio 2.2.1**, **Microsoft.ML 4.0.0**, and **Microsoft.ML.LightGbm 4.0.0** in \`WpfApp1.csproj\`.
+
+### Setup and running
+
+**Requirements:** Windows, the .NET 10 SDK, and preferably Visual Studio with the **.NET desktop development** workload.
+
+1. Clone the repository and open \`WpfApp1.slnx\` in Visual Studio.
+2. **Move two files into the folder expected by the application.** They are currently committed in the repository root, but \`RepairCatalog.cs\` loads them from \`RuntimeAssets\`:
+
+   \`\`\`text
+   RuntimeAssets/
+   ├── MLModel1.kiserleti.mlnet
+   └── roller_hibak_tanitoadatok.csv
+   \`\`\`
+
+   From the repository root, run in PowerShell:
+
+   \`\`\`powershell
+   New-Item -ItemType Directory -Force .\RuntimeAssets | Out-Null
+   Move-Item .\MLModel1.kiserleti.mlnet .\RuntimeAssets\
+   Move-Item .\roller_hibak_tanitoadatok.csv .\RuntimeAssets\
+   \`\`\`
+
+   Keep \`MLModel1.mlnet\` in the repository root; it is referenced separately by the project.
+
+3. Restore NuGet dependencies and attempt a build:
+
+   \`\`\`powershell
+   dotnet restore .\WpfApp1.csproj
+   dotnet build .\WpfApp1.csproj
+   dotnet run --project .\WpfApp1.csproj
+   \`\`\`
+
+4. **Optional — enable voice recognition.** Add a compatible Whisper.cpp Windows executable and the configured Hungarian model:
+
+   \`\`\`text
+   RuntimeAssets/
+   ├── Release/
+   │   └── whisper-cli.exe
+   ├── ggml-whisper-base-hungarian-soup-q8_0.bin
+   ├── MLModel1.kiserleti.mlnet
+   └── roller_hibak_tanitoadatok.csv
+   \`\`\`
+
+   The Whisper executable and model are **not included** in this repository. Without them, speech features are unavailable; typed fault descriptions do not require Whisper.
+
+> **Current build status:** The source and model files are available, but a clean build and end-to-end run of the GitHub checkout have **not been verified**. The asset relocation above is necessary with the current code.
+
+### Models, data and limitations
+
+- \`MLModel1.kiserleti.mlnet\` is the model referenced by the repair-classification workflow in \`RepairCatalog.cs\`.
+- \`MLModel1.mlnet\` and the generated \`MLModel1.*.cs\` files relate to a separate ML.NET Model Builder workflow; do not assume both models are interchangeable.
+- \`roller_hibak_tanitoadatok.csv\` contains Hungarian fault descriptions, codes, categories, possible causes and suggested repairs.
+- The development dataset includes AI-assisted examples and paraphrases. Similar examples between data splits may lead to optimistic evaluation results.
+- The recorded classification experiment reported **66.32% test MacroAccuracy** and **71.17% test MicroAccuracy**; these are not measurements of end-to-end repair correctness or speech-recognition quality.
+
+See [ai.md](ai.md) for the methodology, AI-assisted development disclosure, and interpretation of the recorded results.
+
+**Safety:** ScooterScribe does not replace qualified mechanical inspection. A suggested repair must be verified before work is carried out, especially for brakes, steering, battery systems and other safety-critical components.
+
+### Project status
+
+This is a learning and portfolio project under development, not a production-ready diagnostic tool. Future improvements could include model-specific scooter data, independently collected workshop examples, more robust evaluation, and better deployment packaging.
+
+---
 
 ## Magyar
 
-A ScooterScribe kezdő mikromobilitási szerelőknek segít a hibaleírás alapján hibakategóriát és lehetséges javítási kiindulópontot találni. Az ML.NET előre meghatározott hibakódokba sorolja a szöveget, a CSV-katalógus pedig kategóriát és javítási javaslatot ad. A Whisper.cpp opcionálisan helyben alakítja szöveggé a beszédet. A javítási javaslatokat szakembernek ellenőriznie kell.
+### A projektről
 
-Az MI-használatról és a modell kiértékeléséről az [ai.md](ai.md) fájlban olvashatsz.
+A **ScooterScribe** egy Windowsos asztali alkalmazás, amely a kezdő elektromosroller-szerelőknek segít elindulni a hibakeresésben.
+
+Az ötlet a mikromobilitási szervizelésben szerzett gyakorlati tapasztalatból született: egy kezdő gyakran el tudja mondani, hogy mi a baj a rollerrel, de nem feltétlenül tudja, melyik alkatrésznél érdemes elkezdenie a vizsgálatot. A program a hibaleírás alapján **hibakategóriát**, **lehetséges okot** és **javítási kiindulópontot** javasol.
+
+A ScooterScribe **döntéstámogató prototípus**, nem automatikus diagnosztikai rendszer.
+
+### Funkciók
+
+- **Szöveges vagy hangalapú hibabejelentés:** kézi beírás, hangrögzítés vagy hangfájl megnyitása.
+- **Helyi beszédfelismerés:** opcionális magyar nyelvű átírás Whisper.cpp segítségével.
+- **MI-alapú besorolás:** az ML.NET egy előre definiált hibakódot becsül.
+- **Javítási javaslatok:** a CSV-katalógusból lehetséges hibák és javítási lépések kereshetők ki.
+- **Bizonytalanság kezelése:** a program jelzi az ellenőrzést igénylő, kevésbé megbízható találatokat.
+- **Hibajegyelőzmények:** az elfogadott hibajegyek helyben, \`hibajegyek.jsonl\` formátumban tárolódnak.
+
+### Működési elv
+
+\`\`\`text
+Hibaleírás (szöveg vagy beszéd)
+              │
+              ▼
+ Beszéd esetén: Whisper.cpp
+              │
+              ▼
+         Szöveges leírás
+              │
+              ▼
+      ML.NET hibabesorolás
+              │
+              ▼
+         Becsült hibakód
+              │
+              ▼
+      CSV javítási katalógus
+              │
+              ▼
+Hibakategória + lehetséges ok + javítás
+              │
+              ▼
+    Emberi ellenőrzés és mentés
+\`\`\`
+
+A modell **meglévő hibakategóriák közül választ**. A javítási szöveg **nem generatív MI-válasz**: a program a tanítóadatokhoz kapcsolódó katalógusból keresi ki. A ChatGPT nem futási függőség.
+
+### Felhasznált technológiák
+
+| Terület | Megoldás |
+| --- | --- |
+| Programozási nyelv | C# |
+| Platform | .NET 10, Windows |
+| Grafikus felület | WPF / XAML |
+| Gépi tanulás | ML.NET |
+| Hangfeldolgozás | NAudio, opcionálisan Whisper.cpp |
+| Hibakatalógus | CSV |
+| Hibajegyek tárolása | Helyi JSON Lines |
+| Fejlesztőkörnyezet | Visual Studio |
+
+### Telepítés és indítás
+
+1. Klónozd a repositoryt, majd nyisd meg a \`WpfApp1.slnx\` fájlt Visual Studióban.
+2. A főmappában lévő \`MLModel1.kiserleti.mlnet\` és \`roller_hibak_tanitoadatok.csv\` fájlokat helyezd át a \`RuntimeAssets\` mappába. Ezt a program jelenlegi fájlkezelése megköveteli. A pontos PowerShell-parancsokat az [angol telepítési útmutató](#setup-and-running) tartalmazza.
+3. Állítsd helyre a NuGet-csomagokat, majd fordítsd és indítsd el a projektet .NET 10 SDK-val.
+4. A hangfelismeréshez külön be kell szerezni a kompatibilis \`whisper-cli.exe\` programot és a \`ggml-whisper-base-hungarian-soup-q8_0.bin\` modellt, majd az angol résznél látható \`RuntimeAssets\` útvonalakra kell helyezni őket.
+
+**Fontos:** a GitHubon található változat tiszta fordítását és teljes működését még nem ellenőriztem. A szükséges modell- és CSV-fájlok rendelkezésre állnak, de jelenleg rossz mappában szerepelnek a repositoryban.
+
+### Modell és kiértékelés
+
+A modell magyar hibaleírásokból becsül hibakódot. A katalógus a hibakódhoz kategóriát, lehetséges hibát és javasolt javítást rendel. Az adathalmaz AI-val támogatott példákat és átfogalmazásokat is tartalmaz, ezért a valós műhelyesetekre várható pontosság további ellenőrzést igényel.
+
+A dokumentált tesztkísérlet **66,32% MacroAccuracy** és **71,17% MicroAccuracy** eredményt adott. Ezek kizárólag a **hibabesorolás** mérőszámai, nem a javítási javaslatok helyességét vagy a beszédfelismerés pontosságát jelentik.
+
+A részletes módszertan és az MI-vel támogatott fejlesztés bemutatása az [ai.md](ai.md) fájlban található.
+
+### Korlátok és tervezett fejlesztések
+
+A rendszer jelenleg általános rollerhibákat kezel, és nem egy adott típus részletes szervizdokumentációjára épül. A javaslatok szerelői ellenőrzést igényelnek; különösen a fék-, kormány- és akkumulátorrendszer esetében nem helyettesítik a szakszerű diagnosztikát.
+
+További fejlesztési lehetőség a rollertípusonkénti specializáció, a valós műhelyadatokon végzett független tesztelés, a modell pontosságának javítása és az egyszerűbb telepítés.
+
+---
+
+**ScooterScribe — a C#/.NET learning and portfolio project informed by practical micromobility maintenance experience.**
