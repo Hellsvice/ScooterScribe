@@ -1,0 +1,61 @@
+{
+  "Scenario": "Classification",
+  "DataSource": {
+    "Version": 3,
+    "EscapeCharacter": "\"",
+    "ReadMultiLines": false,
+    "KeepDiacritics": false,
+    "KeepPunctuations": false,
+    "AllowQuoting": true,
+    "Type": "TabularFile",
+    "FilePath": "RuntimeAssets/roller_hibak_tanitoadatok.csv",
+    "Delimiter": ",",
+    "DecimalMarker": ".",
+    "HasHeader": true,
+    "ColumnProperties": [
+      {"ColumnName":"Hibaleiras","ColumnPurpose":"Feature","ColumnDataFormat":"String","IsCategorical":false,"Type":"Column","Version":5},
+      {"ColumnName":"Kategoria","ColumnPurpose":"Ignore","ColumnDataFormat":"String","IsCategorical":false,"Type":"Column","Version":5},
+      {"ColumnName":"PotencialisHiba","ColumnPurpose":"Ignore","ColumnDataFormat":"String","IsCategorical":false,"Type":"Column","Version":5},
+      {"ColumnName":"JavasoltJavitas","ColumnPurpose":"Ignore","ColumnDataFormat":"String","IsCategorical":false,"Type":"Column","Version":5},
+      {"ColumnName":"HibaKod","ColumnPurpose":"Label","ColumnDataFormat":"String","IsCategorical":false,"Type":"Column","Version":5}
+    ]
+  },
+  "Environment": {"Type":"LocalCPU","Version":1},
+  "RunHistory": {
+    "Version":3,
+    "Type":"Result",
+    "Trials": [
+      {"Version":1,"Type":"Trial","TrainerName":"LightGbmMulti","Score":0.46683817889161566,"RuntimeInSeconds":4.472,"Parameter":{
+        "_SCHEMA_":"e0 * e1 * e2 * e3 * e6",
+        "e0":{"InputColumnName":"Hibaleiras","OutputColumnName":"Hibaleiras"},
+        "e1":{"InputColumnNames":["Hibaleiras"],"OutputColumnName":"Features"},
+        "e2":{"OutputColumnName":"HibaKod","InputColumnName":"HibaKod","AddKeyValueAnnotationsAsText":false},
+        "e3":{"NumberOfLeaves":4,"MinimumExampleCountPerLeaf":20,"LearningRate":1.0,"NumberOfTrees":4,"SubsampleFraction":1.0,"MaximumBinCountPerFeature":254,"FeatureFraction":1.0,"L1Regularization":2e-10,"L2Regularization":1.0,"LabelColumnName":"HibaKod","FeatureColumnName":"Features"},
+        "e6":{"OutputColumnName":"PredictedLabel","InputColumnName":"PredictedLabel"}
+      }},
+      {"Version":1,"Type":"Trial","TrainerName":"LightGbmMulti","Score":0.46675527123737337,"RuntimeInSeconds":4.461,"Parameter":{
+        "_SCHEMA_":"e0 * e1 * e2 * e3 * e6",
+        "e0":{"InputColumnName":"Hibaleiras","OutputColumnName":"Hibaleiras"},
+        "e1":{"InputColumnNames":["Hibaleiras"],"OutputColumnName":"Features"},
+        "e2":{"OutputColumnName":"HibaKod","InputColumnName":"HibaKod","AddKeyValueAnnotationsAsText":false},
+        "e3":{"NumberOfLeaves":4,"MinimumExampleCountPerLeaf":20,"LearningRate":0.9999997766729865,"NumberOfTrees":4,"SubsampleFraction":0.9999997766729865,"MaximumBinCountPerFeature":226,"FeatureFraction":0.9938973353694276,"L1Regularization":3.1239404409365404e-10,"L2Regularization":0.9999997766729865,"LabelColumnName":"HibaKod","FeatureColumnName":"Features"},
+        "e6":{"OutputColumnName":"PredictedLabel","InputColumnName":"PredictedLabel"}
+      }},
+      {"Version":1,"Type":"Trial","TrainerName":"LbfgsMaximumEntropyMulti","Score":0.11409822981008086,"RuntimeInSeconds":43.63,"Parameter":{
+        "_SCHEMA_":"e0 * e1 * e2 * e5 * e6",
+        "e0":{"InputColumnName":"Hibaleiras","OutputColumnName":"Hibaleiras"},
+        "e1":{"InputColumnNames":["Hibaleiras"],"OutputColumnName":"Features"},
+        "e2":{"OutputColumnName":"HibaKod","InputColumnName":"HibaKod","AddKeyValueAnnotationsAsText":false},
+        "e5":{"L1Regularization":1.0,"L2Regularization":1.0,"LabelColumnName":"HibaKod","FeatureColumnName":"Features"},
+        "e6":{"OutputColumnName":"PredictedLabel","InputColumnName":"PredictedLabel"}
+      }}
+    ],
+    "Estimators":{"e0":"FeaturizeText","e1":"Concatenate","e2":"MapValueToKey","e3":"LightGbmMulti","e4":"LbfgsLogisticRegressionOva","e5":"LbfgsMaximumEntropyMulti","e6":"MapKeyToValue"},
+    "Schema":"e0 * e1 * e2 * (e3 + e4 + e5) * e6",
+    "MetricName":"MacroAccuracy",
+    "ModelFilePath":"MLModel1.mlnet"
+  },
+  "Type":"TrainingConfig",
+  "Version":5,
+  "TrainingOption":{"Version":2,"Subsampling":false,"Tuner":"eci-cfo","Type":"ClassificationTrainingOption","TrainingTime":600,"OptimizeMetric":"MacroAccuracy","LabelColumn":"HibaKod","AvailableTrainers":["LBFGS","LGBM"],"ValidationOption":{"Version":0,"Type":"CrossValidationValidationOption","NumberOfFolds":5}}
+}
