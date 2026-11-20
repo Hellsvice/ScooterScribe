@@ -1,0 +1,21 @@
+# Visual Studio and build output
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+artifacts/
+
+# Local runtime binaries supplied separately
+**/ggml-*.bin
+/RuntimeAssets/Release/
+/RuntimeAssets/Tanitasok/
+
+# Local recordings, tickets and packages
+*.wav
+*.mp3
+*.flac
+*.ogg
+hibajegyek.jsonl
+*.zip
+*.log
