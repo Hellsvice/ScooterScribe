@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>ScooterScribe.Desktop</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="Microsoft.ML" Version="4.0.0" />
+    <PackageReference Include="Microsoft.ML.LightGbm" Version="4.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="RuntimeAssets\**\*" />
+    <Content Remove="RuntimeAssets\**\*" />
+    <Content Include="RuntimeAssets\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup Label="MLModel1">
+    <None Update="MLModel1.mlnet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <Target Name="CheckWhisperFiles" BeforeTargets="PrepareForBuild">
+    <Warning Condition="!Exists('$(MSBuildProjectDirectory)\RuntimeAssets\Release\whisper-cli.exe')" Text="Hangbevitel nem használható. Hiányzik a Whisper innen: $(MSBuildProjectDirectory)\RuntimeAssets\Release\whisper-cli.exe" />
+  </Target>
+</Project>
